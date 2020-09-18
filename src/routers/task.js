@@ -7,7 +7,7 @@ router.post("/tasks", async (req, res) => {
     const task = new Task(req.body);
     try {
         await task.save();
-        res.status.send(201).send(task);
+        res.status(201).send(task);
     } catch (error) {
         res.status(400).send(error); 
     }
@@ -44,13 +44,18 @@ router.patch("/tasks/:id", async (req, res)=>{
         return res.status(400).send({error: "invalid updates!"})
     
     try {
-        const task = await Task.findByIdAndUpdate(_id, req.body, {new: true, runValidators: true});
+        const task = await Task.findById(_id);
+
+        updates.forEach((update) => task[update] = req.body[update]);
+
+        await task.save();
         
         if(!task)
             return res.status(404).send();
         
         res.send(task);
     } catch (error) {
+        console.log(error);
         res.status(500).send();
     }
 })

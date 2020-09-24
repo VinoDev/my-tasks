@@ -16,14 +16,8 @@ const taskSchema = new mongoose.Schema({
         required: true,
         ref: "User"
     }    
-})
-
-taskSchema.pre('save', async function(next){
-    const task = this;
-
-    console.log("Task middleware");
-
-    next();
+}, {
+    timestamps: true
 })
 
 const Task = mongoose.model('Task', taskSchema);

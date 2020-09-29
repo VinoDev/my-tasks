@@ -1,27 +1,9 @@
 const request = require('supertest');
-const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
-const bycrypt = require('bcryptjs');
 const app = require('../src/app.js');
 const User = require('../src/models/user.js');
+const {testUserId, testUser, authString, setupDatabase} = require('./fixtures/db.js');
 
-const testUserId = new mongoose.Types.ObjectId();
-const testUser = {
-    _id: testUserId,
-    name: "Ron",
-    email: "rom@mail.com",
-    password: "rontest123",
-    tokens: [{
-        token: jwt.sign({ _id: testUserId }, process.env.JWT_SECRET)
-    }]
-}
-
-const authString = `Bearer ${testUser.tokens[0].token}`;
-
-beforeEach(async () => {
-    await User.deleteMany();
-    await new User(testUser).save();
-})
+beforeEach(setupDatabase)
 
 test('Should signup a new user', async () => {
     const response = await request(app).post('/users')

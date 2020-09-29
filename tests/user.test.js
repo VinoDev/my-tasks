@@ -1,6 +1,7 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const bycrypt = require('bcryptjs');
 const app = require('../src/app.js');
 const User = require('../src/models/user.js');
 
@@ -30,7 +31,7 @@ test('Should signup a new user', async () => {
             password: "test123"
         })
         .expect(201)
-    
+
     const user = await User.findById(response.body.user._id);
     expect(user).not.toBeNull();
 
@@ -83,7 +84,7 @@ test('Should delete account for user', async () => {
         .set('Authorization', authString)
         .send()
         .expect(200)
-    
+
     const user = await User.findById(response.body._id);
     expect(user).toBeNull();
 })
@@ -91,5 +92,37 @@ test('Should delete account for user', async () => {
 test('Should NOT delete account for unauthenticated user', async () => {
     await request(app).delete('/users/me')
         .send()
+        .expect(401)
+})
+
+test('Should upload avatar image', async () => {
+    const response = await request(app).post('/users/me/avatar')
+        .send()
+        .set("Authorization", authString)
+        .attach('avatar', 'tests/fixtures/profile-pic.jpg')
+        .expect(200)
+
+    const user = await User.findById(testUser._id);
+    expect(user.avatar).toEqual(expect.any(Buffer));
+})
+
+test('Should update user fileds', async () => {
+    const response = await request(app).patch('/users/me')
+        .send({
+            name: "patrick"
+        })
+        .set("Authorization", authString)
+        .expect(200)
+
+    const user = await User.findById(testUser._id)
+
+    expect(user.name).toBe("patrick");
+})
+
+test('Should NOT update invalid user fields', async () => {
+    await request(app).patch('/users/me')
+        .send({
+            location: "Paris"
+        })
         .expect(401)
 })
